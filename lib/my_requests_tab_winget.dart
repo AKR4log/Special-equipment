@@ -13,16 +13,14 @@ class MyRequestsTab extends StatefulWidget {
   _MyRequests createState() => _MyRequests();
 }
 
-class _MyRequests extends State<MyRequestsTab> with TickerProviderStateMixin {
-  String _textReqOrWork = "Заказы";
+class _MyRequests extends State<MyRequestsTab> {
   bool status = false;
 
   init() {
-    var authUser = FirebaseAuth.instance.currentUser;
-    if (authUser != null) {
+    if (FirebaseAuth.instance.currentUser.uid != null) {
       FirebaseFirestore.instance
           .collection("users")
-          .doc(authUser.uid)
+          .doc(FirebaseAuth.instance.currentUser.uid)
           .get()
           .then((value) {
         if (value.data() != null) {
@@ -36,82 +34,91 @@ class _MyRequests extends State<MyRequestsTab> with TickerProviderStateMixin {
 
   @override
   initState() {
-    init();
+    if (FirebaseAuth.instance.currentUser != null) {
+      init();
+    }
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget _titleTab = Container(
-      margin: EdgeInsets.only(top: 30),
-      child: Align(
-        alignment: Alignment.topLeft,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.0, left: 16.0),
-          child: Row(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Text(_textReqOrWork,
-                      style: TextStyle(
-                        color: Colors.blueGrey.shade900, // зеленый цвет текста
-                        fontSize: 24, // высота шрифта 26
-                      ))
-                ],
-              ),
+    Widget activityRequest() {
+      if (FirebaseAuth.instance.currentUser != null) {
+        return status
+            ? StreamProvider<List<Contract>>.value(
+                value: FeedState().allMyApplyTaskApplications,
+                child: MyApplyActiveListing(),
+              )
+            : StreamProvider<List<Tasks>>.value(
+                value: FeedState().allMyTaskApplications,
+                child: MyActiveListing(),
+              );
+      }
+    }
+
+    Widget archRequest() {
+      if (FirebaseAuth.instance.currentUser != null) {
+        return status
+            ? Center(
+                child: Text('Вы в режиме исполнителя'),
+              )
+            : StreamProvider<List<Tasks>>.value(
+                value: FeedState().allMyDeteleTaskApplications,
+                child: MyDeteleListing(),
+              );
+      }
+    }
+
+    if (FirebaseAuth.instance.currentUser != null) {
+      return DefaultTabController(
+        length: 2,
+        child: new Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            automaticallyImplyLeading: false,
+            elevation: 0,
+            title: Text(
+              'Сохранённые',
+              style: TextStyle(color: Colors.black),
+            ),
+            bottom: TabBar(
+              physics: BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics()),
+              labelPadding: EdgeInsets.all(15),
+              // isScrollable: true,
+              labelColor: Color.fromRGBO(78, 41, 254, 1),
+              indicatorColor: Color.fromRGBO(78, 41, 254, 1),
+              unselectedLabelColor: Colors.blueGrey.shade900,
+              tabs: [Text("АКТИВНЫЕ"), Text("АРХИВ")],
+            ),
+          ),
+          body: new TabBarView(
+            children: <Widget>[
+              activityRequest(),
+              archRequest(),
             ],
           ),
         ),
-      ),
-    );
-    Widget activityRequest = status
-        ? StreamProvider<List<Contract>>.value(
-            value: FeedState().allMyApplyTaskApplications,
-            child: MyApplyActiveListing(),
-          )
-        : StreamProvider<List<Tasks>>.value(
-            value: FeedState().allMyTaskApplications,
-            child: MyActiveListing(),
-          );
-
-    Widget archRequest = status
-        ? Center(
-            child: Text('Вы в режиме исполнителя'),
-          )
-        : StreamProvider<List<Tasks>>.value(
-            value: FeedState().allMyDeteleTaskApplications,
-            child: MyDeteleListing(),
-          );
-
-    return DefaultTabController(
-      length: 2,
-      child: new Scaffold(
+      );
+    } else {
+      return Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
+          elevation: 0,
           backgroundColor: Colors.white,
           automaticallyImplyLeading: false,
           title: Text(
             'Сохранённые',
             style: TextStyle(color: Colors.black),
           ),
-          bottom: TabBar(
-            physics:
-                BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-            labelPadding: EdgeInsets.all(15),
-            // isScrollable: true,
-            labelColor: Color.fromRGBO(78, 41, 254, 1),
-            indicatorColor: Color.fromRGBO(78, 41, 254, 1),
-            unselectedLabelColor: Colors.blueGrey.shade900,
-            tabs: [Text("АКТИВНЫЕ"), Text("АРХИВ")],
-          ),
         ),
-        body: new TabBarView(
-          children: <Widget>[
-            activityRequest,
-            archRequest,
-          ],
-        ),
-      ),
-    );
+        body: Center(
+            child: Text(
+          "Чтобы видеть сохранённые, для начала нужно авторизоваться",
+          textAlign: TextAlign.center,
+        )),
+      );
+    }
   }
 }

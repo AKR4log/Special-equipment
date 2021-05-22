@@ -944,10 +944,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
 
     Widget mapContainer() {
-      if (FirebaseAuth.instance.currentUser != null && status) {
+      if (FirebaseAuth.instance.currentUser != null && !status) {
         final task = Provider.of<List<Tasks>>(context);
         if (task != null && task.length != null && task.length >= 1) {
-          print('da');
           task.forEach((doc) {
             _markers.add(Marker(
                 markerId: MarkerId(doc.uidTask),

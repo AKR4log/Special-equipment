@@ -15,13 +15,12 @@ class ChatTab extends StatefulWidget {
 
 class _ChatTabState extends State<ChatTab> {
   Stream chatRoomsStream;
-  String uid = FirebaseAuth.instance.currentUser.uid;
 
   Future<Stream<QuerySnapshot>> getChatRooms() async {
     return FirebaseFirestore.instance
         .collection("chatrooms")
         .orderBy("lastMessageSendTs", descending: true)
-        .where("users", arrayContains: uid)
+        .where("users", arrayContains: FirebaseAuth.instance.currentUser.uid)
         .snapshots();
   }
 
@@ -37,8 +36,12 @@ class _ChatTabState extends State<ChatTab> {
                 shrinkWrap: true,
                 itemBuilder: (context, index) {
                   DocumentSnapshot ds = snapshot.data.docs[index];
-                  return ChatRoomListTile(ds["lastMessage"], ds.id, uid,
-                      ds["lastMessageSendBy"], ds["lastMessageSendTs"]);
+                  return ChatRoomListTile(
+                      ds["lastMessage"],
+                      ds.id,
+                      FirebaseAuth.instance.currentUser.uid,
+                      ds["lastMessageSendBy"],
+                      ds["lastMessageSendTs"]);
                 })
             : Center(child: Text('Здесь будут ваши сообщения'));
       },
@@ -52,7 +55,9 @@ class _ChatTabState extends State<ChatTab> {
 
   @override
   void initState() {
-    init();
+    if (FirebaseAuth.instance.currentUser != null) {
+      init();
+    }
     super.initState();
   }
 
@@ -74,9 +79,7 @@ class _ChatTabState extends State<ChatTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            SafeArea(
-              child: chatRoomsList(),
-            ),
+            SafeArea(child: chatRoomsList()),
           ],
         ),
       ),

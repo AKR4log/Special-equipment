@@ -44,8 +44,7 @@ class _HomeState extends State<Home> {
   List<Widget> tabs = [HomePage(), MyRequestsTab(), ChatTab(), ProfileTab()];
 
   init() {
-    var authUser = FirebaseAuth.instance.currentUser;
-    if (authUser != null) {
+    if (FirebaseAuth.instance.currentUser != null) {
       FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser.uid)
