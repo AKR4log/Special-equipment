@@ -1,4 +1,4 @@
-# alaket_ios
+# Special-Equipment
 
 A new Flutter application.
 
